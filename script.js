@@ -48,16 +48,16 @@ const ROW3 = [
 ];
 const ROW4 = [
     {keyCode: 16, code: 'ShiftLeft', title: 'Shift', width: 2},
-    {keyCode: 90, shifted_ru: 'Я', shifted_en: 'Z', en: 'z', ru: 'z', width: 1},
-    {keyCode: 88, shifted_ru: 'Ч', shifted_en: 'X', en: 'x', ru: 'x', width: 1},
-    {keyCode: 67, shifted_ru: 'С', shifted_en: 'C', en: 'c', ru: 'c', width: 1},
-    {keyCode: 86, shifted_ru: 'М', shifted_en: 'V', en: 'v', ru: 'v', width: 1},
-    {keyCode: 66, shifted_ru: 'И', shifted_en: 'B', en: 'b', ru: 'b', width: 1},
-    {keyCode: 78, shifted_ru: 'Т', shifted_en: 'N', en: 'n', ru: 'n', width: 1},
-    {keyCode: 77, shifted_ru: 'Ь', shifted_en: 'M', en: 'm', ru: 'm', width: 1},
+    {keyCode: 90, shifted_ru: 'Я', shifted_en: 'Z', en: 'z', ru: 'я', width: 1},
+    {keyCode: 88, shifted_ru: 'Ч', shifted_en: 'X', en: 'x', ru: 'ч', width: 1},
+    {keyCode: 67, shifted_ru: 'С', shifted_en: 'C', en: 'c', ru: 'с', width: 1},
+    {keyCode: 86, shifted_ru: 'М', shifted_en: 'V', en: 'v', ru: 'м', width: 1},
+    {keyCode: 66, shifted_ru: 'И', shifted_en: 'B', en: 'b', ru: 'и', width: 1},
+    {keyCode: 78, shifted_ru: 'Т', shifted_en: 'N', en: 'n', ru: 'т', width: 1},
+    {keyCode: 77, shifted_ru: 'Ь', shifted_en: 'M', en: 'm', ru: 'ь', width: 1},
     {keyCode: 188, shifted_ru: 'Б', shifted_en: '<', en: ',', ru: 'б', width: 1},
     {keyCode: 190, shifted_ru: 'Ю', shifted_en: '>', en: '.', ru: 'ю', width: 1},
-    {keyCode: 191, shifted_ru: ',', shifted_en: '?', value: '/', width: 1},
+    {keyCode: 191, shifted_ru: ',', shifted_en: '?', en: '/', ru: '.', width: 1},
     {keyCode: 38, title: 'up', width: 1},
     {keyCode: 16, code: 'ShiftRight', title: 'Shift', width: 1},
 ];
@@ -75,7 +75,8 @@ const ROW5 = [
 const KEYS_MAP = convertRowsToMap(ROW1, ROW2, ROW3, ROW4, ROW5);
 
 let INPUT;
-let LANG = 'ru';
+let LANG = window.localStorage.getItem('lang') || 'ru';
+
 let IS_CAPS = false;
 let CARET = 0;
 
@@ -189,6 +190,7 @@ function handleKeyUp(key, shifted) {
     if (key.keyCode === 18 && shifted) {
         LANG = LANG === 'ru' ? 'en' : 'ru'
         changeKeyboardLanguageView();
+        window.localStorage.setItem('lang', LANG);
     }
 }
 
@@ -319,7 +321,7 @@ function fillKeys(row, keys) {
         const button = document.createElement('button');
         button.classList.add('button');
         button.style.flexGrow = key.width;
-        button.innerText = key.ru || key.value || key.title;
+        button.innerText = key[LANG] || key.value || key.title;
         if (button.innerText.trim() === '') {
             button.innerText = key.title || '';
         }
