@@ -110,8 +110,8 @@ textarea,
 }
 
 .button {
+  overflow: hidden;
   height: 100%;
-  min-width: 40px;
   margin-left: 2px;
   margin-right: 2px;
   cursor: pointer;
@@ -151,6 +151,12 @@ textarea,
   left: 0;
   background: #04c804;
   z-index: 15;
+  opacity: 1;
+  animation: showing 0.5s 1s infinite;
+
+  &.active {
+    animation: none;
+  }
 }
 
 .brand {
@@ -169,5 +175,11 @@ textarea,
 @keyframes rotate {
   to {
     filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes showing {
+  50% {
+    background: none;
   }
 }

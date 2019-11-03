@@ -188,6 +188,7 @@ class Keyboard {
     handleKeyDown(key, shifted) {
         let value = key[this.language] || key.value;
         if (value) {
+            this.computer.onAction('writeStart');
             if (this.caps_lock) {
                 value = value.toUpperCase();
             }
@@ -237,6 +238,7 @@ class Keyboard {
             this.changeKeyboardLanguageView();
             window.localStorage.setItem('lang', this.language);
         }
+        return this.computer.onAction('writeEnd');
     }
 
     changeCaseView() {
@@ -263,9 +265,11 @@ class Display {
     INPUT;
     CARET = 0;
     dash;
+    computer;
 
     constructor(computer, container) {
         this.draw(container);
+        this.computer = computer;
     }
 
     draw(computer) {
@@ -363,6 +367,8 @@ class Display {
         this.INPUT.value = new_value.join('');
         this.moveCaretRight();
         this.updateVisualCaret();
+        this.computer.onAction('save', this.INPUT.value);
+
     }
 
     updateVisualCaret() {
@@ -384,6 +390,7 @@ class Display {
         this.moveCaretLeft();
         this.INPUT.value = current_value.join('')
         this.updateVisualCaret();
+        this.computer.onAction('save', this.INPUT.value);
     }
 
     delete() {
@@ -391,6 +398,15 @@ class Display {
         current_value.splice(this.CARET, 1);
         this.INPUT.value = current_value.join('')
         this.updateVisualCaret();
+        this.computer.onAction('save', this.INPUT.value);
+    }
+
+    toggleCaret(value) {
+        if (value) {
+            this.dash.classList.add('active');
+        } else {
+            this.dash.classList.remove('active');
+        }
 
     }
 
@@ -451,7 +467,23 @@ class Computer {
     }
 
     turnOn() {
-        // this.greet();
+        const cache = window.localStorage.getItem('input');
+        if (cache) {
+            this.applyCache(cache);
+        } else {
+            this.greet();
+        }
+    }
+
+    applyCache(cache) {
+        const splitted = cache.split('');
+        const interval = setInterval(() => {
+            this.display.write(splitted[0]);
+            splitted.shift();
+            if (splitted.length === 0) {
+                clearInterval(interval)
+            }
+        }, 0)
     }
 
 
@@ -490,7 +522,13 @@ class Computer {
             case 'caretDown':
                 return this.display.moveCaretDown();
             case 'delete':
-                return this.display.delete()
+                return this.display.delete();
+            case 'writeStart':
+                return this.display.toggleCaret(true);
+            case 'writeEnd':
+                return this.display.toggleCaret(false);
+            case 'save':
+                return window.localStorage.setItem('input', data)
         }
 
     }
