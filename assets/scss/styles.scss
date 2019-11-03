@@ -4,6 +4,10 @@ html, body {
   margin: 0;
 }
 
+* {
+  user-select: none;
+}
+
 .wrap {
   background-image: url('../img/bg.png');
   background-position: 0 0;
@@ -78,11 +82,26 @@ html, body {
   margin-right: 2px;
   cursor: pointer;
   flex-shrink: 1;
+  transition: 0.3s;
+
+  &.active {
+    border: 1px solid white;
+    background: #1425ff;
+    animation: rotate 0.8s infinite linear;
+    filter: hue-rotate(0deg);
+    color: white;
+  }
 }
 
 @keyframes move {
   to {
     background-position: 256px 256px;
 
+  }
+}
+
+@keyframes rotate {
+  to {
+    filter: hue-rotate(360deg);
   }
 }
