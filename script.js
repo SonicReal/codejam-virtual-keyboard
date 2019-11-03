@@ -388,7 +388,7 @@ class Display {
         const current_value = this.INPUT.value.split('');
         current_value.splice(this.CARET - 1, 1);
         this.moveCaretLeft();
-        this.INPUT.value = current_value.join('')
+        this.INPUT.value = current_value.join('');
         this.updateVisualCaret();
         this.computer.onAction('save', this.INPUT.value);
     }
@@ -396,7 +396,7 @@ class Display {
     delete() {
         const current_value = this.INPUT.value.split('');
         current_value.splice(this.CARET, 1);
-        this.INPUT.value = current_value.join('')
+        this.INPUT.value = current_value.join('');
         this.updateVisualCaret();
         this.computer.onAction('save', this.INPUT.value);
     }
@@ -414,7 +414,7 @@ class Display {
         const rect = this.INPUT.parentElement.getBoundingClientRect();
         const value = this.INPUT.value.substr(0, this.CARET);
         const div = document.createElement('div');
-        div.classList.add('fake_textarea')
+        div.classList.add('fake_textarea');
         div.style.position = 'fixed';
         div.style.top = rect.top + 'px';
         div.style.left = rect.left + 'px';
@@ -435,7 +435,7 @@ class Display {
             div.appendChild(span);
             orientation = 'left'
         }
-        document.body.appendChild(div)
+        document.body.appendChild(div);
         const spans = div.getElementsByTagName('span');
         let span;
         if (spans.length > 0) {
@@ -443,7 +443,7 @@ class Display {
         } else {
             span = document.createElement('span');
             span.innerText = '.';
-            div.appendChild(span)
+            div.appendChild(span);
             orientation = 'left'
 
         }
@@ -476,11 +476,11 @@ class Computer {
     }
 
     applyCache(cache) {
-        const splitted = cache.split('');
+        const slitted = cache.split('');
         const interval = setInterval(() => {
-            this.display.write(splitted[0]);
-            splitted.shift();
-            if (splitted.length === 0) {
+            this.display.write(slitted[0]);
+            slitted.shift();
+            if (slitted.length === 0) {
                 clearInterval(interval)
             }
         }, 0)
