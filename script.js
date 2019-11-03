@@ -202,11 +202,17 @@ class Keyboard {
         if (key.keyCode === 8) {
             return this.computer.onAction('backspace')
         }
-        if (key.keyCode === 37 || key.keyCode === 38) {
+        if (key.keyCode === 37) {
             return this.computer.onAction('caretLeft')
         }
-        if (key.keyCode === 39 || key.keyCode === 40) {
+        if (key.keyCode === 38) {
+            return this.computer.onAction('caretUp')
+        }
+        if (key.keyCode === 39) {
             return this.computer.onAction('caretRight');
+        }
+        if (key.keyCode === 40) {
+            return this.computer.onAction('caretDown');
         }
         if (key.keyCode === 46) {
             return this.computer.onAction('delete')
@@ -256,6 +262,7 @@ class Keyboard {
 class Display {
     INPUT;
     CARET = 0;
+    dash;
 
     constructor(computer, container) {
         this.draw(container);
@@ -269,18 +276,85 @@ class Display {
         display.classList.add('display');
         display.appendChild(brand);
         computer.appendChild(display);
+        const input_wrapper = document.createElement('div');
+        input_wrapper.classList.add('input-wrapper');
+        display.appendChild(input_wrapper);
+
         const input = document.createElement("textarea");
         input.setAttribute('disabled', 'disabled');
-        display.appendChild(input);
+        input_wrapper.appendChild(input);
         this.INPUT = input;
+        const dash = document.createElement('span');
+        dash.classList.add('dash');
+        input_wrapper.appendChild(dash);
+        this.dash = dash;
+        this.updateVisualCaret();
     }
 
     moveCaretLeft() {
         this.CARET = this.CARET - 1 < 0 ? 0 : this.CARET - 1;
+        this.updateVisualCaret();
+
     }
 
     moveCaretRight() {
         this.CARET = this.CARET + 1 > this.INPUT.value.length ? this.INPUT.value.length : this.CARET + 1;
+        this.updateVisualCaret();
+
+    }
+
+    moveCaretUp() {
+        let left_offset = 0;
+        let prev_str_length = 0;
+        let cursor = this.CARET - 1 < 0 ? 0 : this.CARET - 1;
+        let symbol = this.INPUT.value[cursor];
+        while (cursor !== 0 && symbol !== '\n') {
+            cursor--;
+            symbol = this.INPUT.value[cursor];
+            left_offset++;
+        }
+        if (cursor === 0) {
+            this.CARET = 0;
+        } else {
+            this.CARET = cursor;
+            symbol = this.INPUT.value[this.CARET - 1];
+            while (this.CARET !== 0 && symbol !== '\n') {
+                this.moveCaretLeft();
+                symbol = this.INPUT.value[this.CARET - 1];
+                prev_str_length++;
+            }
+            for (let i = 0; i < Math.min(left_offset, prev_str_length); i++) {
+                this.moveCaretRight();
+            }
+        }
+        this.updateVisualCaret();
+    }
+
+    moveCaretDown() {
+        let left_offset = 0;
+        let cursor = this.CARET - 1;
+        let next_str_length = 0;
+        let symbol = this.INPUT.value[cursor];
+
+        while (symbol !== '\n' && cursor >= 0) {
+            left_offset++;
+            cursor--;
+            symbol = this.INPUT.value[cursor];
+        }
+        while (this.INPUT.value[this.CARET] !== '\n' && this.CARET < this.INPUT.value.length) {
+            this.moveCaretRight();
+        }
+        this.moveCaretRight();
+        cursor = this.CARET;
+        while (this.INPUT.value[cursor] !== '\n' && cursor < this.INPUT.value.length) {
+            next_str_length++;
+            cursor++;
+        }
+
+        for (let i = 0; i < Math.min(left_offset, next_str_length); i++) {
+            this.moveCaretRight();
+        }
+        this.updateVisualCaret();
     }
 
     write(symbol) {
@@ -288,6 +362,17 @@ class Display {
         new_value.splice(this.CARET, 0, symbol);
         this.INPUT.value = new_value.join('');
         this.moveCaretRight();
+        this.updateVisualCaret();
+    }
+
+    updateVisualCaret() {
+        setTimeout(() => {
+            const coords = this.getCursorXY();
+            if (coords) {
+                this.dash.style.left = coords.x + 'px';
+                this.dash.style.top = coords.y + 'px';
+            }
+        }, 0)
     }
 
     backspace() {
@@ -298,13 +383,60 @@ class Display {
         current_value.splice(this.CARET - 1, 1);
         this.moveCaretLeft();
         this.INPUT.value = current_value.join('')
+        this.updateVisualCaret();
     }
 
     delete() {
         const current_value = this.INPUT.value.split('');
         current_value.splice(this.CARET, 1);
         this.INPUT.value = current_value.join('')
+        this.updateVisualCaret();
+
     }
+
+    getCursorXY() {
+        const rect = this.INPUT.parentElement.getBoundingClientRect();
+        const value = this.INPUT.value.substr(0, this.CARET);
+        const div = document.createElement('div');
+        div.classList.add('fake_textarea')
+        div.style.position = 'fixed';
+        div.style.top = rect.top + 'px';
+        div.style.left = rect.left + 'px';
+        div.style.width = rect.width + 'px';
+        div.style.height = rect.height + 'px';
+        div.style.background = 'transparent';
+        div.style.zIndex = '42';
+
+        let orientation = 'right';
+        for (const symbol of value) {
+            const span = document.createElement('span');
+            span.innerText = symbol === ' ' ? '.' : symbol;
+            div.appendChild(span)
+        }
+        if (value[value.length - 1] === '\n') {
+            const span = document.createElement('span');
+            span.innerText = '.';
+            div.appendChild(span);
+            orientation = 'left'
+        }
+        document.body.appendChild(div)
+        const spans = div.getElementsByTagName('span');
+        let span;
+        if (spans.length > 0) {
+            span = spans[spans.length - 1];
+        } else {
+            span = document.createElement('span');
+            span.innerText = '.';
+            div.appendChild(span)
+            orientation = 'left'
+
+        }
+        const span_coords = span.getBoundingClientRect();
+        this.INPUT.scrollTop = span.offsetTop - 10;
+        div.parentElement.removeChild(div);
+        return {x: span_coords[orientation] - rect.left, y: span_coords.top - rect.top - this.INPUT.scrollTop};
+    }
+
 }
 
 class Computer {
@@ -319,7 +451,7 @@ class Computer {
     }
 
     turnOn() {
-        this.greet();
+        // this.greet();
     }
 
 
@@ -353,6 +485,10 @@ class Computer {
                 return this.display.moveCaretLeft();
             case 'caretRight':
                 return this.display.moveCaretRight();
+            case 'caretUp':
+                return this.display.moveCaretUp();
+            case 'caretDown':
+                return this.display.moveCaretDown();
             case 'delete':
                 return this.display.delete()
         }
