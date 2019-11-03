@@ -18,6 +18,8 @@
     "url": "https://github.com/SonicReal/codejam-virtual-keyboard/issues"
   },
   "devDependencies": {
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.6.0",
     "node-sass": "^4.12.0",
     "nodemon": "^1.19.3"
   },

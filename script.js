@@ -1,7 +1,6 @@
 class Keyboard {
-    language = 'ru';
     row1 = [
-        {shifted: '', shifted_ru: 'Ё', shifted_en: '~', keyCode: 192, ru: 'ё', en: '\`', width: 1},
+        {shifted: '', shifted_ru: 'Ё', shifted_en: '~', keyCode: 192, ru: 'ё', en: '`', width: 1},
         {shifted: '!', keyCode: 49, value: '1', width: 1},
         {shifted: '', shifted_ru: '"', shifted_en: '@', keyCode: 50, value: '2', width: 1},
         {shifted: '', shifted_ru: '№', shifted_en: '#', keyCode: 51, value: '3', width: 1},
@@ -88,20 +87,20 @@ class Keyboard {
     initialize() {
         window.addEventListener('keydown', e => {
             try {
-                const key = this.getKeyByEvent(e)
+                const key = this.getKeyByEvent(e);
                 key.button.classList.add('active');
                 this.handleKeyDown(key, e.shiftKey);
             } catch (err) {
-                return;
+                console.log(err.message);
             }
-        })
+        });
         window.addEventListener('keyup', e => {
             try {
                 const key = this.getKeyByEvent(e);
-                key.button.classList.remove('active')
+                key.button.classList.remove('active');
                 this.handleKeyUp(key, e.shiftKey)
             } catch (err) {
-                return;
+                console.log(err.message);
             }
         })
     }
@@ -110,7 +109,7 @@ class Keyboard {
         const result = {};
         for (const row of args) {
             for (const key of row) {
-                if (!result.hasOwnProperty(key.keyCode)) {
+                if (!result[key.keyCode]) {
                     result[key.keyCode] = key;
                 } else {
                     result[key.keyCode].alterative = key;
@@ -137,8 +136,8 @@ class Keyboard {
 
     fillRow(keys, container) {
         const row = document.createElement('div');
-        row.classList.add('keys-row')
-        container.append(row)
+        row.classList.add('keys-row');
+        container.append(row);
         this.fillKeys(row, keys);
     }
 
@@ -154,7 +153,7 @@ class Keyboard {
             row.appendChild(button);
             key.button = button;
             button.addEventListener('mousedown', e => {
-                for (let i in this.keys_map) {
+                for (const i in this.keys_map) {
                     if (this.keys_map[i].button === e.target) {
                         return this.handleKeyDown(this.keys_map[i])
                     }
@@ -228,7 +227,7 @@ class Keyboard {
             this.changeCaseView();
         }
         if (key.keyCode === 18 && shifted) {
-            this.language = this.language === 'ru' ? 'en' : 'ru'
+            this.language = this.language === 'ru' ? 'en' : 'ru';
             this.changeKeyboardLanguageView();
             window.localStorage.setItem('lang', this.language);
         }
@@ -259,20 +258,19 @@ class Display {
     CARET = 0;
 
     constructor(computer, container) {
-        this.computer = computer;
         this.draw(container);
     }
 
     draw(computer) {
         const brand = document.createElement('label');
         brand.innerText = 'iSonic';
-        brand.classList.add('brand')
+        brand.classList.add('brand');
         const display = document.createElement('div');
         display.classList.add('display');
         display.appendChild(brand);
         computer.appendChild(display);
         const input = document.createElement("textarea");
-        input.setAttribute('disabled', 'disabled')
+        input.setAttribute('disabled', 'disabled');
         display.appendChild(input);
         this.INPUT = input;
     }
@@ -286,8 +284,8 @@ class Display {
     }
 
     write(symbol) {
-        const new_value = this.INPUT.value.split('')
-        new_value.splice(this.CARET, 0, symbol)
+        const new_value = this.INPUT.value.split('');
+        new_value.splice(this.CARET, 0, symbol);
         this.INPUT.value = new_value.join('');
         this.moveCaretRight();
     }
@@ -310,7 +308,7 @@ class Display {
 }
 
 class Computer {
-
+    version = '1.0.0';
 
     constructor() {
         const init_lang = window.localStorage.getItem('lang') || 'ru';
@@ -328,7 +326,7 @@ class Computer {
     greet() {
         const greeting = `System online...\n`.split('');
         const interval = setInterval(() => {
-            this.display.write(greeting[0])
+            this.display.write(greeting[0]);
             greeting.shift();
             if (greeting.length === 0) {
                 clearInterval(interval);
@@ -339,8 +337,8 @@ class Computer {
     draw() {
         const wrap = document.body.appendChild(document.createElement('div'));
         wrap.classList.add('wrap');
-        const computer = document.createElement('div')
-        computer.classList.add('computer')
+        const computer = document.createElement('div');
+        computer.classList.add('computer');
         wrap.appendChild(computer);
         return computer;
     }
@@ -363,3 +361,4 @@ class Computer {
 }
 
 const computer = new Computer();
+console.log(computer.version);
