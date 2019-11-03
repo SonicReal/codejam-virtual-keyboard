@@ -47,7 +47,7 @@ const ROW3 = [
     {keyCode: 13, value: "\n", title: 'Enter', width: 2},
 ];
 const ROW4 = [
-    {keyCode: 16, title: 'Shift', width: 2},
+    {keyCode: 16, code: 'ShiftLeft', title: 'Shift', width: 2},
     {keyCode: 90, shifted_ru: 'Я', shifted_en: 'Z', en: 'z', ru: 'z', width: 1},
     {keyCode: 88, shifted_ru: 'Ч', shifted_en: 'X', en: 'x', ru: 'x', width: 1},
     {keyCode: 67, shifted_ru: 'С', shifted_en: 'C', en: 'c', ru: 'c', width: 1},
@@ -59,15 +59,15 @@ const ROW4 = [
     {keyCode: 190, shifted_ru: 'Ю', shifted_en: '>', en: '.', ru: 'ю', width: 1},
     {keyCode: 191, shifted_ru: ',', shifted_en: '?', value: '/', width: 1},
     {keyCode: 38, title: 'up', width: 1},
-    {keyCode: 16, title: 'Shift', width: 1},
+    {keyCode: 16, code: 'ShiftRight', title: 'Shift', width: 1},
 ];
 const ROW5 = [
-    {keyCode: 17, title: 'Ctrl', width: 1.7},
+    {keyCode: 17, title: 'Ctrl', code: 'ControlLeft', width: 1.7},
     {keyCode: 91, title: 'Win', width: 1},
-    {keyCode: 18, title: 'Alt', width: 1},
+    {keyCode: 18, code: 'AltLeft', title: 'Alt', width: 1},
     {keyCode: 32, value: ' ', width: 22},
-    {keyCode: 18, title: 'Alt', width: 1},
-    {keyCode: 17, title: 'Ctrl', width: 1.7},
+    {keyCode: 18, code: 'AltRight', title: 'Alt', width: 1},
+    {keyCode: 17, title: 'Ctrl', code: 'ControlRight', width: 1.7},
     {keyCode: 37, title: 'left', width: 1},
     {keyCode: 40, title: 'down', width: 1},
     {keyCode: 39, title: 'right', width: 1},
@@ -83,7 +83,11 @@ function convertRowsToMap(...args) {
     const result = {};
     for (const row of args) {
         for (const key of row) {
-            result[key.keyCode] = key;
+            if (!result.hasOwnProperty(key.keyCode)) {
+                result[key.keyCode] = key;
+            } else {
+                result[key.keyCode].alterative = key;
+            }
         }
     }
     return result;
@@ -94,7 +98,7 @@ generateKeyboard()
 window.addEventListener('keydown', e => {
     try {
         // e.preventDefault();
-        const key = KEYS_MAP[e.keyCode];
+        const key = getKeyByEvent(e)
         key.button.classList.add('active');
         this.handleKeyDown(key, e.shiftKey);
     } catch (err) {
@@ -104,7 +108,7 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keyup', e => {
     try {
         // e.preventDefault();
-        const key = KEYS_MAP[e.keyCode];
+        const key = getKeyByEvent(e);
         key.button.classList.remove('active')
         this.handleKeyUp(key, e.shiftKey)
     } catch (err) {
@@ -112,9 +116,17 @@ window.addEventListener('keyup', e => {
     }
 })
 
+function getKeyByEvent(e) {
+    const key = KEYS_MAP[e.keyCode];
+    if (!key.alterative) {
+        return key;
+    }
+    const code = e.code;
+    return key.alterative.code === code ? key.alterative : key;
+}
+
 function handleKeyDown(key, shifted) {
     let value = key[LANG] || key.value;
-    console.log(key.keyCode)
     if (value) {
         if (IS_CAPS) {
             value = value.toUpperCase();
@@ -166,6 +178,12 @@ function moveCaretRight() {
 function handleKeyUp(key, shifted) {
     if (key.keyCode === 20) {
         IS_CAPS = !IS_CAPS;
+        if (IS_CAPS) {
+            key.button.classList.add('toggled')
+        } else {
+            key.button.classList.remove('toggled')
+
+        }
         changeCaseView();
     }
     if (key.keyCode === 18 && shifted) {
@@ -200,6 +218,19 @@ function generateKeyboard() {
     wrap.appendChild(computer);
     addDisplay(computer);
     addKeyboard(computer);
+    const greeting = `System online...
+`
+        .split('');
+    const interval = setInterval(() => {
+        INPUT.value += greeting[0];
+        greeting.shift();
+        if (greeting.length === 0) {
+            clearInterval(interval);
+            INPUT.scrollTop = '100%';
+        }
+        moveCaretRight();
+    }, 50);
+
 }
 
 function createComputer() {
@@ -209,8 +240,12 @@ function createComputer() {
 }
 
 function addDisplay(computer) {
+    const brand = document.createElement('label');
+    brand.innerText = 'iSonic';
+    brand.classList.add('brand')
     const display = document.createElement('div');
     display.classList.add('display');
+    display.appendChild(brand);
     computer.appendChild(display);
     const input = document.createElement("textarea");
     input.setAttribute('disabled', 'disabled')
@@ -224,6 +259,7 @@ function addKeyboard(computer) {
     computer.appendChild(keyboard);
     addKeys(keyboard);
 }
+
 
 function addKeys(keyboard) {
     const keys_container = document.createElement('div');
@@ -289,5 +325,25 @@ function fillKeys(row, keys) {
         }
         row.appendChild(button);
         key.button = button;
+        button.addEventListener('mousedown', e => {
+            for (let i in KEYS_MAP) {
+                if (KEYS_MAP[i].button === e.target) {
+                    return handleKeyDown(KEYS_MAP[i])
+                }
+                if (KEYS_MAP[i].alterative && KEYS_MAP[i].alterative.button === e.target) {
+                    return this.handleKeyDown(key)
+                }
+            }
+        })
+        button.addEventListener('mouseup', e => {
+            for (let i in KEYS_MAP) {
+                if (KEYS_MAP[i].button === e.target) {
+                    return handleKeyUp(KEYS_MAP[i])
+                }
+                if (KEYS_MAP[i].alterative && KEYS_MAP[i].alterative.button === e.target) {
+                    return this.handleKeyUp(key)
+                }
+            }
+        })
     }
 }
